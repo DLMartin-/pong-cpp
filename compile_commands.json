@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/home/acorn/Projects/game-template-cpp/build",
+  "command": "/usr/bin/c++   -std=gnu++20 -o CMakeFiles/game.dir/src/main.cpp.o -c /home/acorn/Projects/game-template-cpp/src/main.cpp",
+  "file": "/home/acorn/Projects/game-template-cpp/src/main.cpp"
+},
+{
+  "directory": "/home/acorn/Projects/game-template-cpp/build",
+  "command": "/usr/bin/c++   -std=gnu++20 -o CMakeFiles/game.dir/src/game_main.cpp.o -c /home/acorn/Projects/game-template-cpp/src/game_main.cpp",
+  "file": "/home/acorn/Projects/game-template-cpp/src/game_main.cpp"
+}
+]
