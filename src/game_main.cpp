@@ -6,13 +6,14 @@
 
 #include <SDL2/SDL.h>
 
+#include "ball.h"
+
 namespace {
 using Ticks = std::chrono::duration<double, std::milli>;
 Ticks const MAX_TICKS(1000. / 60.);
 
 struct Pong {
-  unsigned int counter{0};
-  Ticks elapsedTime{0.};
+  Ball ball{};
 };
 using ScreenVariant = std::variant<Pong>;
 ScreenVariant screen{};
@@ -27,15 +28,16 @@ unsigned int secondsCounter{0};
 void update(Ticks const &dt);
 void update(Pong &pong, Ticks const &dt);
 
-// void draw();
-// void draw(Pong& pong);
+void draw(SDL_Renderer *const renderer);
+void draw(Ball const &ball, SDL_Renderer *const renderer);
+void draw(Pong const &pong, SDL_Renderer *const renderer);
 
 [[nodiscard]] GameResult
 game_main([[maybe_unused]] ArgsVec const &args) noexcept {
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     return GameResult::Error_Initialization;
 
-  auto *const window = SDL_CreateWindow("Title", SDL_WINDOWPOS_UNDEFINED,
+  auto *const window = SDL_CreateWindow("Pong!!!!", SDL_WINDOWPOS_UNDEFINED,
                                         SDL_WINDOWPOS_UNDEFINED, 750, 300, 0);
   if (!window)
     return GameResult::Error_Window_Creation;
@@ -68,6 +70,10 @@ game_main([[maybe_unused]] ArgsVec const &args) noexcept {
     }
 
     SDL_RenderClear(renderer);
+
+    /* Draw Here */
+    draw(renderer);
+    /* End Draw */
     SDL_RenderPresent(renderer);
   }
 
@@ -83,13 +89,26 @@ void update(Ticks const &dt) {
 }
 
 void update(Pong &pong, Ticks const &dt) {
-  pong.elapsedTime += dt;
-  if (pong.elapsedTime >= Ticks(1000.)) {
-    pong.elapsedTime -= Ticks(1000.);
-    pong.counter += 1;
+  pong.ball.bounds.x += static_cast<int>(dt.count() * pong.ball.speed *
+                                         static_cast<int>(pong.ball.direction));
+  if (pong.ball.bounds.x > 750)
+    pong.ball.direction = Ball::Direction::LEFT;
 
-    std::cout << "(NEW) Seconds elapsed: " << pong.counter << "\n";
-    if (pong.counter == 10)
-      isRunning = false;
-  }
+  if (pong.ball.bounds.x < (0 - pong.ball.bounds.w))
+    pong.ball.direction = Ball::Direction::RIGHT;
 }
+
+void draw(SDL_Renderer *const renderer) {
+  std::visit([renderer](auto &&screen_) { draw(screen_, renderer); }, screen);
+}
+
+void draw(Ball const &ball, SDL_Renderer *const renderer) {
+  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+  SDL_RenderFillRect(renderer, &ball.bounds);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+}
+
+void draw(Pong const &pong, SDL_Renderer *const renderer) {
+  draw(pong.ball, renderer);
+}
+
