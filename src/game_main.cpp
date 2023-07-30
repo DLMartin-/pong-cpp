@@ -13,7 +13,12 @@ using Ticks = std::chrono::duration<double, std::milli>;
 Ticks const MAX_TICKS(1000. / 60.);
 
 struct Pong {
+  enum struct State { SERVING, PLAYING };
+  State state{State::SERVING};
+  unsigned int counter{0};
   Ball ball{};
+  unsigned char leftPaddleScore{0};
+  unsigned char rightPaddleScore{0};
 };
 using ScreenVariant = std::variant<Pong>;
 ScreenVariant screen{};
@@ -89,13 +94,60 @@ void update(Ticks const &dt) {
 }
 
 void update(Pong &pong, Ticks const &dt) {
-  pong.ball.bounds.x += static_cast<int>(dt.count() * pong.ball.speed *
-                                         static_cast<int>(pong.ball.direction));
-  if (pong.ball.bounds.x > 750)
-    pong.ball.direction = Ball::Direction::LEFT;
+  static Ticks accumulator{0.};
+  switch (pong.state) {
+  case Pong::State::SERVING:
+    accumulator += dt;
+    if (accumulator >= Ticks(1000.)) {
+      accumulator = accumulator - Ticks(1000.);
+      if (pong.counter < 3) {
+        // We need to flush, otherwise the text won't appear in the console
+        // until after the state has changed to PLAYING
+        std::cout << (3 - pong.counter) << "..." << std::flush;
+      }
+      pong.counter++;
+    }
 
-  if (pong.ball.bounds.x < (0 - pong.ball.bounds.w))
-    pong.ball.direction = Ball::Direction::RIGHT;
+    if (pong.counter > 3) {
+      std::cout << "START!!!\n";
+      pong.state = Pong::State::PLAYING;
+      accumulator = Ticks(0.);
+      pong.counter = 0;
+    }
+    break;
+
+  case Pong::State::PLAYING:
+    bool didScore = false;
+    pong.ball.bounds.x += static_cast<int>(
+        dt.count() * pong.ball.speed * static_cast<int>(pong.ball.direction));
+    if (pong.ball.bounds.x > 750) {
+      didScore = true;
+      pong.leftPaddleScore++;
+    }
+
+    if (pong.ball.bounds.x < (0 - pong.ball.bounds.w)) {
+      didScore = true;
+      pong.rightPaddleScore++;
+    }
+
+    if (didScore) {
+      if (pong.ball.direction == Ball::Direction::LEFT)
+        pong.ball.direction = Ball::Direction::RIGHT;
+      else
+        pong.ball.direction = Ball::Direction::LEFT;
+
+      pong.ball.bounds.x = (750 / 2) - (pong.ball.bounds.w / 2);
+      pong.state = Pong::State::SERVING;
+
+      std::cout << "-----Score-----\n";
+      std::cout << "Left Paddle: "
+                << static_cast<unsigned int>(pong.leftPaddleScore) << "\n";
+      std::cout << "Right Paddle: "
+                << static_cast<unsigned int>(pong.rightPaddleScore) << "\n";
+      std::cout << std::endl;
+    }
+    break;
+  }
 }
 
 void draw(SDL_Renderer *const renderer) {
@@ -111,4 +163,3 @@ void draw(Ball const &ball, SDL_Renderer *const renderer) {
 void draw(Pong const &pong, SDL_Renderer *const renderer) {
   draw(pong.ball, renderer);
 }
-
