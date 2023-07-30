@@ -1,5 +1,6 @@
 #include "game_main.h"
 
+#include <SDL2/SDL_rect.h>
 #include <chrono>
 #include <iostream>
 #include <variant>
@@ -7,6 +8,7 @@
 #include <SDL2/SDL.h>
 
 #include "ball.h"
+#include "paddle.h"
 
 namespace {
 using Ticks = std::chrono::duration<double, std::milli>;
@@ -17,6 +19,8 @@ struct Pong {
   State state{State::SERVING};
   unsigned int counter{0};
   Ball ball{};
+  Paddle leftPaddle{20, 125, 15, 50};
+  Paddle rightPaddle{720, 125, 15, 50};
   unsigned char leftPaddleScore{0};
   unsigned char rightPaddleScore{0};
 };
@@ -120,6 +124,17 @@ void update(Pong &pong, Ticks const &dt) {
     bool didScore = false;
     pong.ball.bounds.x += static_cast<int>(
         dt.count() * pong.ball.speed * static_cast<int>(pong.ball.direction));
+
+    if (SDL_HasIntersection(&pong.ball.bounds, &pong.leftPaddle.bounds) == SDL_TRUE) {
+        pong.ball.bounds.x = pong.leftPaddle.bounds.x + pong.leftPaddle.bounds.w;
+        pong.ball.direction = Ball::Direction::RIGHT;
+    }
+
+    if (SDL_HasIntersection(&pong.ball.bounds, &pong.rightPaddle.bounds) == SDL_TRUE) {
+        pong.ball.bounds.x = pong.rightPaddle.bounds.x - pong.rightPaddle.bounds.w;
+        pong.ball.direction = Ball::Direction::LEFT;
+    }
+
     if (pong.ball.bounds.x > 750) {
       didScore = true;
       pong.leftPaddleScore++;
@@ -160,6 +175,14 @@ void draw(Ball const &ball, SDL_Renderer *const renderer) {
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
 
+void draw(Paddle const &paddle, SDL_Renderer *const renderer) {
+  SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+  SDL_RenderFillRect(renderer, &paddle.bounds);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+}
+
 void draw(Pong const &pong, SDL_Renderer *const renderer) {
   draw(pong.ball, renderer);
+  draw(pong.leftPaddle, renderer);
+  draw(pong.rightPaddle, renderer);
 }
