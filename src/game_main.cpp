@@ -1,5 +1,6 @@
 #include "game_main.h"
 
+#include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_rect.h>
 #include <chrono>
 #include <iostream>
@@ -31,6 +32,7 @@ SDL_Event event{};
 bool isRunning{true};
 unsigned int frameCounter{0};
 unsigned int secondsCounter{0};
+Uint8 const *keyboardState = SDL_GetKeyboardState(nullptr);
 
 } // namespace
 
@@ -125,14 +127,65 @@ void update(Pong &pong, Ticks const &dt) {
     pong.ball.bounds.x += static_cast<int>(
         dt.count() * pong.ball.speed * static_cast<int>(pong.ball.direction));
 
-    if (SDL_HasIntersection(&pong.ball.bounds, &pong.leftPaddle.bounds) == SDL_TRUE) {
-        pong.ball.bounds.x = pong.leftPaddle.bounds.x + pong.leftPaddle.bounds.w;
-        pong.ball.direction = Ball::Direction::RIGHT;
+    pong.ball.bounds.y += static_cast<int>(dt.count() * pong.ball.ySpeed);
+
+    if (keyboardState[SDL_SCANCODE_A]) {
+      pong.leftPaddle.bounds.y -=
+          static_cast<int>(dt.count() * pong.leftPaddle.speed);
+      if (pong.leftPaddle.bounds.y < 0)
+        pong.leftPaddle.bounds.y = 0;
     }
 
-    if (SDL_HasIntersection(&pong.ball.bounds, &pong.rightPaddle.bounds) == SDL_TRUE) {
-        pong.ball.bounds.x = pong.rightPaddle.bounds.x - pong.rightPaddle.bounds.w;
+    if (keyboardState[SDL_SCANCODE_Z]) {
+      pong.leftPaddle.bounds.y +=
+          static_cast<int>(dt.count() * pong.leftPaddle.speed);
+      if (pong.leftPaddle.bounds.y + pong.leftPaddle.bounds.h > 300)
+        pong.leftPaddle.bounds.y = 300 - pong.leftPaddle.bounds.h;
+    }
+
+    if (keyboardState[SDL_SCANCODE_K]) {
+
+      pong.rightPaddle.bounds.y -=
+          static_cast<int>(dt.count() * pong.rightPaddle.speed);
+      if (pong.rightPaddle.bounds.y < 0)
+        pong.rightPaddle.bounds.y = 0;
+    }
+
+    if (keyboardState[SDL_SCANCODE_M]) {
+      pong.rightPaddle.bounds.y +=
+          static_cast<int>(dt.count() * pong.leftPaddle.speed);
+      if (pong.rightPaddle.bounds.y + pong.rightPaddle.bounds.h > 300)
+        pong.rightPaddle.bounds.y = 300 - pong.rightPaddle.bounds.h;
+    }
+
+    if (SDL_HasIntersection(&pong.ball.bounds, &pong.leftPaddle.bounds) ==
+        SDL_TRUE) {
+      if (pong.ball.bounds.y >
+          (pong.leftPaddle.bounds.y + pong.leftPaddle.bounds.h - 5)) {
+        pong.ball.ySpeed = 0.4f;
+      }
+
+      if (pong.ball.bounds.x >
+          (pong.leftPaddle.bounds.x + pong.leftPaddle.bounds.w) - 5) {
+        pong.ball.bounds.x =
+            pong.leftPaddle.bounds.x + pong.leftPaddle.bounds.w;
+        pong.ball.direction = Ball::Direction::RIGHT;
+      }
+    }
+
+    if (SDL_HasIntersection(&pong.ball.bounds, &pong.rightPaddle.bounds) ==
+        SDL_TRUE) {
+      if (pong.ball.bounds.y >
+          (pong.rightPaddle.bounds.y + pong.rightPaddle.bounds.h - 5)) {
+        pong.ball.ySpeed = 0.4f;
+      }
+
+      if ((pong.ball.bounds.x + pong.ball.bounds.w) <
+          pong.rightPaddle.bounds.x + 5) {
+        pong.ball.bounds.x =
+            pong.rightPaddle.bounds.x - pong.rightPaddle.bounds.w;
         pong.ball.direction = Ball::Direction::LEFT;
+      }
     }
 
     if (pong.ball.bounds.x > 750) {
@@ -152,6 +205,8 @@ void update(Pong &pong, Ticks const &dt) {
         pong.ball.direction = Ball::Direction::LEFT;
 
       pong.ball.bounds.x = (750 / 2) - (pong.ball.bounds.w / 2);
+      pong.ball.bounds.y = (300 / 2) - (pong.ball.bounds.h / 2);
+      pong.ball.ySpeed = 0.;
       pong.state = Pong::State::SERVING;
 
       std::cout << "-----Score-----\n";

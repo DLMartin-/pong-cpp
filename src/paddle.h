@@ -6,6 +6,7 @@
 struct Paddle {
   Paddle(int x, int y, int w, int h) : bounds(x, y, w, h) {}
   SDL_Rect bounds{0, 0, 0, 0};
+  float speed = 0.2f;
 };
 
 #endif
