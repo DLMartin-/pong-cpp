@@ -200,6 +200,17 @@ void update(Pong &pong, Ticks const &dt) {
       }
     }
 
+    // Collision checking against top and bottom of screen
+    if (pong.ball.bounds.y < 0) {
+      pong.ball.bounds.y = 0;
+      pong.ball.ySpeed = -pong.ball.ySpeed;
+    }
+
+    if ((pong.ball.bounds.y + pong.ball.bounds.h) > 300) {
+      pong.ball.bounds.y = 300 - pong.ball.bounds.h;
+      pong.ball.ySpeed = -pong.ball.ySpeed;
+    }
+
     if (pong.ball.bounds.x > 750) {
       didScore = true;
       pong.leftPaddleScore++;
