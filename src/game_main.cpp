@@ -162,12 +162,12 @@ void update(Pong &pong, Ticks const &dt) {
     if (SDL_HasIntersection(&pong.ball.bounds, &pong.leftPaddle.bounds) ==
         SDL_TRUE) {
       if (pong.ball.bounds.y >
-          (pong.leftPaddle.bounds.y + pong.leftPaddle.bounds.h - 5)) {
+          (pong.leftPaddle.bounds.y + pong.leftPaddle.bounds.h - 15)) {
         pong.ball.ySpeed = 0.4f;
       }
 
       if ((pong.ball.bounds.y + pong.ball.bounds.h) <
-          pong.leftPaddle.bounds.y + 5) {
+          pong.leftPaddle.bounds.y + 15) {
         pong.ball.ySpeed = -0.4f;
       }
 
@@ -183,12 +183,12 @@ void update(Pong &pong, Ticks const &dt) {
     if (SDL_HasIntersection(&pong.ball.bounds, &pong.rightPaddle.bounds) ==
         SDL_TRUE) {
       if (pong.ball.bounds.y >
-          (pong.rightPaddle.bounds.y + pong.rightPaddle.bounds.h - 5)) {
+          (pong.rightPaddle.bounds.y + pong.rightPaddle.bounds.h - 15)) {
         pong.ball.ySpeed = 0.4f;
       }
 
       if ((pong.ball.bounds.y + pong.ball.bounds.h) <
-          pong.rightPaddle.bounds.y + 5) {
+          pong.rightPaddle.bounds.y + 15) {
         pong.ball.ySpeed = -0.4f;
       }
 
